@@ -1,18 +1,25 @@
 package com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers
 
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.DrugTest
-import com.kutzlerstudios.onboardtrackers.models.drug.DrugCSV
 import com.kutzlerstudios.onboardtrackers.models.Person
+import com.kutzlerstudios.onboardtrackers.models.drug.CreateList
 import com.kutzlerstudios.onboardtrackers.models.drug.Credentials
+import com.opencsv.CSVWriter
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class Quest(var peopleIn : List<Person>, var driver : WebDriver) : Thread(), DrugTest {
 
-    var csv = DrugCSV.instance
-    var passwordEmailSent = false
-    var attemptCount = 0
+    var create = CreateList
+    private var passwordEmailSent = false
+    private var attemptCount = 0
 
     override fun run() {
 
@@ -41,7 +48,7 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : Thread(), Dru
             }
         } catch (ignored: NoSuchElementException) { }
         return try {
-            driver.findElement(By.xpath("//*[@id=\"search-boxes\"]/div/input[1]")).sendKeys(person.phone.replace("[\D+]".toRegex(), ""))
+            driver.findElement(By.xpath("//*[@id=\"search-boxes\"]/div/input[1]")).sendKeys(person.phone.replace("[\\D+]".toRegex(), ""))
             driver.findElement(By.xpath("//*[@id=\"search-boxes\"]/div/input[14]")).click()
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//*[@id=\"results-table\"]"))))
             val elements = driver.findElements(By.xpath("//*[@id=\"table-items\"]/*"))
@@ -85,15 +92,50 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : Thread(), Dru
     }
 
     override fun addToNewList(person: Person) {
-        TODO("Not yet implemented")
+        create.add(person)
     }
 
-    override fun getCreateList(): Any {
-        TODO("Not yet implemented")
+    override fun getCreateList(): List<Person> {
+        return create.list
     }
 
-    override fun setupNewTests(people: Any) {
-        TODO("Not yet implemented")
+    @Throws(java.io.IOException::class)
+    override fun setupNewTests(people: List<Person>) {
+        if(people.isEmpty()) return
+        val writer = CSVWriter(Files.newBufferedWriter(Paths.get("/home/gob/dt.csv")),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)
+        writer.writeNext(arrayOf("Primary ID", "First Name", "Last Name", "Primary Phone", "Date of Birth", "Account Number", "Modality",
+                "Client Site Location", "Order Code(s)", "Collection Type", "Reason for Test", "Order Expiration Date",
+                "Order Expiration Time", "Collection Site Code", "Observed", "Email(s)"))
+        for(person in people){
+            writer.writeNext(arrayOf(person.phone, person.firstName.replace("[^a-zA-Z]", " "),
+                    person.lastName.replace("[^a-zA-Z]", " "),
+                    person.phone, "", "10674285", "FMCSA", "", "65304N", "Split", "Pre-Employment",
+                    LocalDate.now().plus(2, ChronoUnit.WEEKS).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                    "1100", person.station.questLocal, "No", person.email))
+            //try catch ApiException
+            //TODO(): SEND TEXT TO EACH PERSON      AND CALL FROM MASTER
+        }
+        writer.close()
+        try {
+            if (login(getCredentials())) {
+                driver["https://esp.employersolutions.com/ImportOrder/Index"]
+                sleep(1600)
+                driver.findElement(By.xpath("/html/body/div[2]/div[2]/div[2]/div[1]/div[3]/form/div[2]/div[1]/div/input[2]")).click()
+                sleep(2000)
+                driver.findElement(By.xpath("//*[@id=\"ImportFileName\"]")).sendKeys("/home/gob/dt.csv")
+                //driver.findElement(By.xpath("//*[@id=\"ImportFileName\"]")).click();
+                //driver.switchTo().activeElement().sendKeys("/home/gob/dt.csv");
+                driver.findElement(By.xpath("//*[@id=\"ui-id-4\"]/input[2]")).click()
+                driver.findElement(By.xpath("//*[@id=\"import-order-form\"]/div[2]/div[4]/div/input")).click()
+                driver.findElement(By.xpath("//*[@id=\"Import\"]")).click()
+                sleep(10000)
+            }
+        } catch (ignored: java.lang.Exception) { }
+        File("/home/gob/dt.csv").delete()
     }
 
     override fun loginError() {

@@ -27,6 +27,12 @@ dependencies {
     implementation("org.mariadb.jdbc:mariadb-java-client:2.1.2")
     implementation("org.seleniumhq.selenium:selenium-server:3.141.59")
     implementation("io.skullabs.stalkr:stalkr-death-by-captcha:0.2.5")
+    implementation("com.opencsv:opencsv:3.7")
+    implementation("com.twilio.sdk:twilio:7.12.0")
+    implementation("com.google.api-client:google-api-client:1.23.0")
+    implementation("com.google.oauth-client:google-oauth-client-jetty:1.23.0")
+    implementation("com.google.apis:google-api-services-gmail:v1-rev83-1.23.0")
+    implementation("javax.mail:mail:1.4.1")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {

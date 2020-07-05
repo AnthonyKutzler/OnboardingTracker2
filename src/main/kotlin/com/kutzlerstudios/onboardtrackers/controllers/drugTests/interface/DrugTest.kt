@@ -2,6 +2,7 @@ package com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`
 
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.drug.Credentials
+import java.io.IOException
 
 interface DrugTest {
 
@@ -14,7 +15,7 @@ interface DrugTest {
                 if (person1.onboard.drug == 0)
                     addToNewList(person1)
             }
-            setupNewTests(getCreateList())
+            //setupNewTests(getCreateList())
         } else loginError()
     }
 
@@ -22,9 +23,9 @@ interface DrugTest {
 
     fun addToNewList(person: Person)
 
-    fun getCreateList(): Any
+    fun getCreateList(): List<Person>
 
-    fun setupNewTests(people: Any)
+    fun setupNewTests(people: List<Person>)
 
     fun login(credentials: Credentials) : Boolean
 
