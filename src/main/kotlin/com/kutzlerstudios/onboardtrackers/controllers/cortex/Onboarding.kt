@@ -32,6 +32,12 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
         }
     }
 
+    fun setDrugTest(){
+        for(person in peopleIn){
+            //TODO: IMPLEMENT
+        }
+    }
+
     @Throws(java.lang.Exception::class)
     private fun runCortex() {
         for (person in peopleIn) {

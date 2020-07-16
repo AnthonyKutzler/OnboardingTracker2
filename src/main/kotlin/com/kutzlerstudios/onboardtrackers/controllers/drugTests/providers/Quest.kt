@@ -2,31 +2,25 @@ package com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers
 
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.DrugTest
 import com.kutzlerstudios.onboardtrackers.models.Person
-import com.kutzlerstudios.onboardtrackers.models.drug.CreateList
 import com.kutzlerstudios.onboardtrackers.models.drug.Credentials
+import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
 import com.opencsv.CSVWriter
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 import java.io.File
+import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Quest(var peopleIn : List<Person>, var driver : WebDriver) : Thread(), DrugTest {
+class Quest(var peopleIn : List<Person>, var driver : WebDriver) : DrugTest {
 
-    var create = CreateList
+    var list = PersonList
     private var passwordEmailSent = false
     private var attemptCount = 0
-
-    override fun run() {
-
-        try {
-            runDrugTest(peopleIn)
-        } catch (ignored: Exception) {}
-    }
 
     override fun checkResults(person: Person): Person {
         if(attemptCount > 5)
@@ -91,14 +85,6 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : Thread(), Dru
         return true
     }
 
-    override fun addToNewList(person: Person) {
-        create.add(person)
-    }
-
-    override fun getCreateList(): List<Person> {
-        return create.list
-    }
-
     @Throws(java.io.IOException::class)
     override fun setupNewTests(people: List<Person>) {
         if(people.isEmpty()) return
@@ -149,7 +135,6 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : Thread(), Dru
     override fun getCredentials(): Credentials {
         TODO("Not yet implemented")
     }
-
 }
 
 

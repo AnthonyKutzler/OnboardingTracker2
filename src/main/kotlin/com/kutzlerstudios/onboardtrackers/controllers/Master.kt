@@ -4,17 +4,21 @@ import com.kutzlerstudios.onboardtrackers.controllers.cortex.Onboarding
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.DrugTest
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers.Quest
 import com.kutzlerstudios.onboardtrackers.models.Person
+import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
+import com.kutzlerstudios.onboardtrackers.repositories.PeopleRepository
+import com.kutzlerstudios.onboardtrackers.services.PeopleService
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 
-class Master(private val threads: Int = 3) {
-    private var drivers = mutableListOf<WebDriver>()
-    private lateinit var onboardList: MutableList<Onboarding>
-    private lateinit var drugList: MutableList<Quest>
-    private lateinit var people: MutableList<Person>
+class Master(private val company : Int, private val repository: PeopleRepository, private val threads: Int = 3) {
 
+    private var drivers = mutableListOf<WebDriver>()
     fun run(){
+        val peopleService = PeopleService(repository)
+        peopleService.setupLists(company)
+        val people = peopleService.cortex
+        val onboardList = mutableListOf<Onboarding>()
         for((index, driver) in drivers.withIndex()){
             val thread = if(index == 0)
                 Onboarding(people.subList(0, people.size/threads), driver)
@@ -26,28 +30,21 @@ class Master(private val threads: Int = 3) {
             onboardList.add(thread)
         }
         people.clear()
-        for(thread in onboardList){
+        for((index, thread) in onboardList.withIndex()) {
             people.addAll(thread.peopleOut)
+            if (index > 0) {
+                drivers[index].close()
+            }
         }
         val drugFiltered = people.filter { it.onboard.background == 2 && it.onboard.drug in 0..3 }.toMutableList()
-        drugFiltered.addAll(getMoreFromRepo)
-        for((index, driver) in drivers.withIndex()){
-            val thread = when(1){
-                else -> if(index == 0)
-                    Quest(people.subList(0, people.size/threads), driver)
-                else
-                    Quest(people.subList((people.size/threads)*index, (people.size/threads)*(index+1)), driver)
-            }
-            //FIXME: TRY ME
-            thread.start()
-            thread.join()
-            drugList.add(thread)
+        drugFiltered.addAll(peopleService.drug)
+        when(someValue){//TODO: GET  FROM COMPANY REPO
+            "QUEST" -> Quest(drugFiltered, drivers[0])
         }
-        val updatePeople = people.filter { it.onboard.background != 2 && it.onboard.drug !in 0..3 }.toMutableList()
-        for(thread in drugList)
-            updatePeople.addAll(thread.peopleIn)
-        drugList[0].setupNewTests(drugList[0].getCreateList())
-
+        people.addAll(PersonList.list)
+        val completeFilter = people. filter { it.onboard.background == 2 && it.onboard.drug == 4 && it.onboard.videos }.toMutableList()
+        Onboarding(completeFilter, drivers[0])
+        drivers[0].close()
     }
 
 

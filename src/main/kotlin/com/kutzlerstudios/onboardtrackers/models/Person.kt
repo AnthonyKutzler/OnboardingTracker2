@@ -17,6 +17,7 @@ class Person(@Id @GeneratedValue(strategy= GenerationType.IDENTITY) var pk : Int
              var note: String? = "Nothing",
              @NotNull @ManyToOne @JoinColumn(name = "onboard", referencedColumnName = "pk") var onboard : Onboard,
              @NotNull @ManyToOne @JoinColumn(name = "contacted", referencedColumnName = "pk") var contacted : Contacted,
-             @NotNull var paused : Boolean){
+             @NotNull var paused : Boolean,
+             @NotNull var company : Int){
 
 }
