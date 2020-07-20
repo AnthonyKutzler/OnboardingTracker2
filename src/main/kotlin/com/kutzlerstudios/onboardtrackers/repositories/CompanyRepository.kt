@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface CompanyRepository : CrudRepository<Company, Long> {
 
-    fun getByPk(pk : Int)
+    fun getByPk(pk : Int): Company
 }

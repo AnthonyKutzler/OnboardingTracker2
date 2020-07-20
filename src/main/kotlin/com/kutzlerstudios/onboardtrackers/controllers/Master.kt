@@ -5,13 +5,14 @@ import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.Drug
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers.Quest
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
+import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
 import com.kutzlerstudios.onboardtrackers.repositories.PeopleRepository
 import com.kutzlerstudios.onboardtrackers.services.PeopleService
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 
-class Master(private val company : Int, private val repository: PeopleRepository, private val threads: Int = 3) {
+class Master(private val repository: PeopleRepository, private val companyRepository: CompanyRepository, private val company : Int, private val threads: Int = 3) {
 
     private var drivers = mutableListOf<WebDriver>()
     fun run(){
@@ -38,7 +39,7 @@ class Master(private val company : Int, private val repository: PeopleRepository
         }
         val drugFiltered = people.filter { it.onboard.background == 2 && it.onboard.drug in 0..3 }.toMutableList()
         drugFiltered.addAll(peopleService.drug)
-        when(someValue){//TODO: GET  FROM COMPANY REPO
+        when(companyRepository.getByPk(company).somevalue){//TODO: GET  FROM COMPANY REPO
             "QUEST" -> Quest(drugFiltered, drivers[0])
         }
         people.addAll(PersonList.list)

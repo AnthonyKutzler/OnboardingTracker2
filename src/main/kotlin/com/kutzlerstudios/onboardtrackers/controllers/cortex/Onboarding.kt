@@ -3,6 +3,7 @@ package com.kutzlerstudios.onboardtrackers.controllers.cortex
 import com.deathbycaptcha.Captcha
 import com.deathbycaptcha.SocketClient
 import com.kutzlerstudios.onboardtrackers.models.Person
+import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
@@ -19,8 +20,8 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
     var peopleOut : MutableList<Person> = mutableListOf()
     var drugList : MutableList<Person> = mutableListOf()
 
-    private val CORTEXUSER = "anthonykutzler@gmail.com"
-    private val CORTEXPASS = "Not@n0th3rFootballR3f3r3nc3!"
+    private lateinit var CORTEXUSER : String
+    private lateinit var CORTEXPASS : String
 
     private var captchaCounter = 0
 
@@ -40,6 +41,7 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
 
     @Throws(java.lang.Exception::class)
     private fun runCortex() {
+        setupCreentials()
         for (person in peopleIn) {
             val temp = checkCortex(person)
             if(temp.onboard.background == 2 && (temp.onboard.drug in 0..3))  drugList.add(temp) else peopleOut.add(temp)
@@ -209,5 +211,10 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
         options.addArguments("--disable-browser-side-navigation")
         options.addArguments("--disable-gpu")
         driver = ChromeDriver(options)
+    }
+
+    private fun setupCreentials(){
+        CORTEXUSER = ""
+        CORTEXPASS = ""
     }
 }
