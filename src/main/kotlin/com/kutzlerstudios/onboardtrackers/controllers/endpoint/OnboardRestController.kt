@@ -14,8 +14,8 @@ class OnboardRestController(private val peopleRepository: PeopleRepository, priv
     @GetMapping
     @RequestMapping("/onboard/run")
     fun runOnboarding(){
-        for(x in z){
+        for(x in 1..2){
             Master(peopleRepository, companyRepository, x).run()
-        }
+        }//TODO("IMPLEMENT")
     }
 }

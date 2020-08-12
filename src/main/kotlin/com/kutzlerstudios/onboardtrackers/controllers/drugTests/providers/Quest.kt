@@ -2,7 +2,8 @@ package com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers
 
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.DrugTest
 import com.kutzlerstudios.onboardtrackers.models.Person
-import com.kutzlerstudios.onboardtrackers.models.drug.Credentials
+import com.kutzlerstudios.onboardtrackers.models.company.Company
+import com.kutzlerstudios.onboardtrackers.models.company.Credential
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
 import com.opencsv.CSVWriter
 import org.openqa.selenium.*
@@ -16,7 +17,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Quest(var peopleIn : List<Person>, var driver : WebDriver) : DrugTest {
+class Quest(var peopleIn : List<Person>, var company: Int, var credential: Credential, var driver : WebDriver) : DrugTest {
 
     var list = PersonList
     private var passwordEmailSent = false
@@ -71,7 +72,7 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : DrugTest {
         }
     }
 
-    override fun login(credentials: Credentials) : Boolean {
+    override fun login(credentials: Credential) : Boolean {
         if (attemptCount > 5) return false
         try {
             driver["https://esp.employersolutions.com/"]
@@ -99,9 +100,9 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : DrugTest {
         for(person in people){
             writer.writeNext(arrayOf(person.phone, person.firstName.replace("[^a-zA-Z]", " "),
                     person.lastName.replace("[^a-zA-Z]", " "),
-                    person.phone, "", "10674285", "FMCSA", "", "65304N", "Split", "Pre-Employment",
+                    person.phone, "", credential.additional, "FMCSA", "", "65304N", "Split", "Pre-Employment",
                     LocalDate.now().plus(2, ChronoUnit.WEEKS).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-                    "1100", person.station.questLocal, "No", person.email))
+                    "1100", "", "No", person.email))
             //try catch ApiException
             //TODO(): SEND TEXT TO EACH PERSON      AND CALL FROM MASTER
         }
@@ -126,14 +127,14 @@ class Quest(var peopleIn : List<Person>, var driver : WebDriver) : DrugTest {
 
     override fun loginError() {
         if(!passwordEmailSent) {
-
+            //TODO: LOGIN ERROR
 
             passwordEmailSent = true
         }
     }
 
-    override fun getCredentials(): Credentials {
-        TODO("Not yet implemented")
+    override fun getCredentials(): Credential {
+        return credential
     }
 }
 

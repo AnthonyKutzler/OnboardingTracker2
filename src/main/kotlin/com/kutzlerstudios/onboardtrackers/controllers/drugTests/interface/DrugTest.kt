@@ -1,11 +1,11 @@
 package com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`
 
 import com.kutzlerstudios.onboardtrackers.models.Person
-import com.kutzlerstudios.onboardtrackers.models.drug.Credentials
+import com.kutzlerstudios.onboardtrackers.models.company.Credential
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
-import java.io.IOException
 
 interface DrugTest {
+
 
 
     fun runDrugTest(people : List<Person>) {
@@ -26,10 +26,10 @@ interface DrugTest {
 
     fun setupNewTests(people: List<Person>)
 
-    fun login(credentials: Credentials) : Boolean
+    fun login(credentials: Credential) : Boolean
 
     fun loginError()
 
-    fun getCredentials() : Credentials
+    fun getCredentials() : Credential
 
 }
