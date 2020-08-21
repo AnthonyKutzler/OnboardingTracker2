@@ -14,7 +14,7 @@ class CredentialController(private var credentialRepository: CredentialRepositor
     @PostMapping
     @RequestMapping("/post")
     fun newCreds(creds: Credential): HttpStatus{
-
+        credentialRepository.save(creds)
 
         return HttpStatus.ACCEPTED
     }

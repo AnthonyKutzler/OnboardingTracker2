@@ -24,7 +24,7 @@ Thank you!"""
             1 -> {
                 message = """PLEASE DO NOT REPLY TO THIS MESSAGE(This is an automated messaging service)
 
-Congratulations, your background passed. Look out for an email from Quest Diagnostics(any QUEST location will suffice), this will have the information you need for your pre-employment drug screen. Also be sure to login to the Amazon portal(where you started the background) and watch your seven onboarding videos. When both of these are completed, please reach reply to this email to schedule a date for you to start your paid classroom training.
+Congratulations, your background passed. Look out for an email from Quest Diagnostics(any QUEST location will suffice, be sure to check your spam folder), this will have the information you need for your pre-employment drug screen. Also be sure to login to the Amazon portal(where you started the background) and watch your seven onboarding videos. When both of these are completed, please reach reply to this email to schedule a date for you to start your paid classroom training.
 
 We look forward to having you be apart of our team.
 

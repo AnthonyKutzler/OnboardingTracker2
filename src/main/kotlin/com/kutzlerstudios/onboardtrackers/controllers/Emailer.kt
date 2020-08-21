@@ -2,7 +2,9 @@ package com.kutzlerstudios.onboardtrackers.controllers
 
 import com.google.api.services.gmail.model.Message
 import com.kutzlerstudios.onboardtrackers.models.Person
+import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
 import com.kutzlerstudios.onboardtrackers.repositories.OnboardRepository
+import com.kutzlerstudios.onboardtrackers.repositories.PeopleRepository
 import com.kutzlerstudios.onboardtrackers.services.GmailService
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +18,10 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import javax.security.auth.Subject
 
-class Emailer(var from: String, @Autowired var onboardRepository: OnboardRepository) {
+class Emailer(var from: String, @Autowired var peopleRepository: PeopleRepository, @Autowired var companyRepository: CompanyRepository) {
+
+    @Autowired
+    private lateinit var onboardRepository: OnboardRepository
 
     private var subject: String = ""
 
@@ -40,16 +45,22 @@ Sincerely, """
         }
     }
 
-    fun sendDaRecap(people : List<List<Person>>){
+    fun sendDaRecap(){
+        var people = buildPeopleLists()
         subject = "Onboarding Daily Recap ${LocalDate.now()}"
         for(peopleList in people){
+            var to = ""
             var sBuilder = StringBuilder("Changes to DAs: \n")
             for(person in peopleList){
                 if(person.onboard.pk != person.checked){
                     sBuilder.append(getChanges(person)).append("\n")
+                    person.checked = person.onboard.pk
+                    peopleRepository.save(person)
+                    to = person.company.email!!
                 }
             }
-        } //TODO: Implement from Rest
+            sendEmail(to, subject, sBuilder.toString())
+        }
     }
 
     fun getChanges(person: Person) : String{
@@ -81,6 +92,14 @@ Sincerely, """
             builder.append("\t Videos: Completed\n")
         }
         return builder.toString()
+    }
+
+    private fun buildPeopleLists(): List<List<Person>>{
+        var parent = mutableListOf<List<Person>>()
+        for(company in companyRepository.findAll()){
+            parent.add(peopleRepository.getAllByCompanyAndStatusLessThan(company.pk!!))
+        }
+        return parent
     }
 
     @Throws(java.lang.Exception::class)

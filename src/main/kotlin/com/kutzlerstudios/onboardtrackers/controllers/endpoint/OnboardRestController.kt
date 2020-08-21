@@ -1,6 +1,6 @@
 package com.kutzlerstudios.onboardtrackers.controllers.endpoint
 
-import com.kutzlerstudios.onboardtrackers.controllers.Master
+import com.kutzlerstudios.onboardtrackers.controllers.MasterController
 import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
 import com.kutzlerstudios.onboardtrackers.repositories.PeopleRepository
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,7 +15,7 @@ class OnboardRestController(private val peopleRepository: PeopleRepository, priv
     @RequestMapping("/onboard/run")
     fun runOnboarding(){
         for(x in 1..2){
-            Master(peopleRepository, companyRepository, x).run()
+            MasterController(peopleRepository, companyRepository, x).run()
         }//TODO("IMPLEMENT")
     }
 }

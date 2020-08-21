@@ -5,6 +5,7 @@ import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.company.Company
 import com.kutzlerstudios.onboardtrackers.models.company.Credential
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
+import com.kutzlerstudios.onboardtrackers.services.TwilioHelper
 import com.opencsv.CSVWriter
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.ExpectedConditions
@@ -22,6 +23,11 @@ class Quest(var peopleIn : List<Person>, var company: Int, var credential: Crede
     var list = PersonList
     private var passwordEmailSent = false
     private var attemptCount = 0
+
+
+    fun runDt(){
+        super.runDrugTest(list.dtList)
+    }
 
     override fun checkResults(person: Person): Person {
         if(attemptCount > 5)
@@ -104,7 +110,7 @@ class Quest(var peopleIn : List<Person>, var company: Int, var credential: Crede
                     LocalDate.now().plus(2, ChronoUnit.WEEKS).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
                     "1100", "", "No", person.email))
             //try catch ApiException
-            //TODO(): SEND TEXT TO EACH PERSON      AND CALL FROM MASTER
+            sendReminder(person)
         }
         writer.close()
         try {
@@ -135,6 +141,10 @@ class Quest(var peopleIn : List<Person>, var company: Int, var credential: Crede
 
     override fun getCredentials(): Credential {
         return credential
+    }
+
+    override fun sendReminder(person: Person) {
+        TwilioHelper(person.company.phone!!, person.phone, 1)
     }
 }
 

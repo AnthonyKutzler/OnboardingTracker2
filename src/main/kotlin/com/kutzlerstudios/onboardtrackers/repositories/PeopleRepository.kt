@@ -6,5 +6,6 @@ import org.springframework.data.repository.CrudRepository
 
 interface PeopleRepository : CrudRepository<Person, Long> {
 
-    fun getAllByCompanyAndOnboardGreaterThanEqual(company: Int, onboard : Int = 77) : MutableList<Person>
+    fun getAllByCompanyAndStatusLessThan(company: Int, status: Int = 2) : MutableList<Person>
+
 }

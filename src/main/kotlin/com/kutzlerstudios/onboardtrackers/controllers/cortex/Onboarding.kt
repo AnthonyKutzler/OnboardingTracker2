@@ -66,6 +66,8 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
     private fun checkProfile(person: Person) : Person{
         setupCortex(person.email)
         person.onboard.background = checkBackground()
+        if(person.onboard.background > 0)
+            person.status = 1
         person.onboard.videos = checkVideos()
         if (person.phone == "")
             person.phone = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[1]/div/div[2]/div[2]/div[1]/div[3]/span")).text
@@ -179,7 +181,7 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
             ImageIO.write(imgCap, "png", os)
             val client = SocketClient("ghostrev", "Wearedead66")
             val res: Captcha = client.decode(ByteArrayInputStream(os.toByteArray()))
-            if (res != null && res.isSolved() && res.isCorrect()) {
+            if (res.isSolved && res.isCorrect) {
                 println("Captcha Correct")
                 driver.findElement(By.id("ap_password")).sendKeys(CORTEXPASS)
                 val captcha: WebElement = driver.findElement(By.xpath("//*[@id=\"auth-captcha-guess\"]"))

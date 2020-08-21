@@ -32,4 +32,6 @@ interface DrugTest {
 
     fun getCredentials() : Credential
 
+    fun sendReminder(person: Person)
+
 }

@@ -12,7 +12,7 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 
-class Master(private val repository: PeopleRepository, private val companyRepository: CompanyRepository, private val threads: Int = 3) {
+class MasterController(var repository: PeopleRepository, var companyRepository: CompanyRepository, var threads: Int = 3) {
 
     private var drivers = mutableListOf<WebDriver>()
     fun run(){
@@ -41,12 +41,17 @@ class Master(private val repository: PeopleRepository, private val companyReposi
             val drugFiltered = people.filter { it.onboard.background == 2 && it.onboard.drug in 0..3 }.toMutableList()
             drugFiltered.addAll(peopleService.drug)
             when (companyRepository.getByPk(company.pk!!).prefs!!.drugProvider!!) {
-                "QUEST" -> Quest(drugFiltered, company.pk!!, drivers[0])
+                "QUEST" -> Quest(drugFiltered, company.pk!!, com.kutzlerstudios.onboardtrackers.models.company.Credential(1, "1",1,"KutzlerA001", "OrderM0r3Drug73575Please2!", "1"), drivers[0])
             }
             people.addAll(PersonList.list)
             val completeFilter = people.filter { it.onboard.background == 2 && it.onboard.drug == 4 && it.onboard.videos }.toMutableList()
-            Onboarding(completeFilter, drivers[0])
+            for(person in completeFilter){
+                person.status = 2
+                repository.save(person)
+            }
+            //Onboarding(completeFilter, drivers[0])
             drivers[0].close()
+            Emailer("cncdin1@cnclogistics.biz", repository, companyRepository).sendDaRecap()
         }
     }
 

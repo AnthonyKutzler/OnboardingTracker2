@@ -16,6 +16,7 @@ class Person(@Id @GeneratedValue(strategy= GenerationType.IDENTITY) var pk : Int
              @NotNull var email: String,
              @NotNull var referral: String,
              var note: String? = "Nothing",
+             var status: Int? = 0,
              @NotNull @ManyToOne @JoinColumn(name = "onboard", referencedColumnName = "pk") var onboard : Onboard,
              @NotNull @ManyToOne @JoinColumn(name = "contacted", referencedColumnName = "pk") var contacted : Contacted,
              @NotNull var paused : Boolean,
