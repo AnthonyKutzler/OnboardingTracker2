@@ -6,4 +6,5 @@ import org.springframework.data.repository.CrudRepository
 interface CompanyRepository : CrudRepository<Company, Long> {
 
     fun getByPk(pk : Int): Company
+    fun findAllBy(): List<Company>
 }

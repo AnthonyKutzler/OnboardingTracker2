@@ -10,5 +10,6 @@ class Credential(@Id @GeneratedValue(strategy = GenerationType.IDENTITY) var pk 
                  @NotNull var company : Int? = null,
                  @NotNull var user : String? = null,
                  @NotNull var pass : String?= null,
+                 @NotNull var provider: String? = null,
                  @NotNull var additional: String) {
 }

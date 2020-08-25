@@ -6,52 +6,62 @@ import com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers.Quest
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
 import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
+import com.kutzlerstudios.onboardtrackers.repositories.CredentialRepository
 import com.kutzlerstudios.onboardtrackers.repositories.PeopleRepository
 import com.kutzlerstudios.onboardtrackers.services.PeopleService
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 
-class MasterController(var repository: PeopleRepository, var companyRepository: CompanyRepository, var threads: Int = 3) {
+class MasterController(var repository: PeopleRepository, var companyRepository: CompanyRepository, var credentialRepository: CredentialRepository) {
 
-    private var drivers = mutableListOf<WebDriver>()
+    private var threads = 3
+
+    //private var drivers = mutableListOf<WebDriver>()
+    private lateinit var driver : WebDriver
+
     fun run(){
+        setup()
         val peopleService = PeopleService(repository)
-        for(company in companyRepository.findAll()) {
+        for(company in companyRepository.findAllBy()) {
             peopleService.setupLists(company.pk!!)
             val people = peopleService.cortex
-            val onboardList = mutableListOf<Onboarding>()
-            for ((index, driver) in drivers.withIndex()) {
-                val thread = if (index == 0)
-                    Onboarding(people.subList(0, people.size / threads), driver)
-                else
-                    Onboarding(people.subList((people.size / threads) * index, (people.size / threads) * (index + 1)), driver)
-                //TODO: TRY ME
-                thread.start()
-                thread.join()
-                onboardList.add(thread)
-            }
-            people.clear()
-            for ((index, thread) in onboardList.withIndex()) {
+            if(people.isNotEmpty()) {
+                val onboardList = mutableListOf<Onboarding>()
+                //for ((index, driver) in drivers.withIndex()) {
+                    var thread = Onboarding(people, driver, credentialRepository)
+                    //val thread = if (index == 0)
+                        //Onboarding(people.subList(0, people.size / threads), driver, credentialRepository)
+                    //else
+                        //Onboarding(people.subList((people.size / threads) * index, (people.size / threads) * (index + 1)), driver, credentialRepository)
+                    //TODO: TRY ME
+                    thread.start()
+                    thread.join()
+                    //onboardList.add(thread)
+                //}
+                people.clear()
                 people.addAll(thread.peopleOut)
-                if (index > 0) {
-                    drivers[index].close()
+                /*for ((index, thread) in onboardList.withIndex()) {
+                    people.addAll(thread.peopleOut)
+                    if (index > 0) {
+                        drivers[index].close()
+                    }
+                }*/
+                val drugFiltered = people.filter { it.onboard.background == 2 && it.onboard.drug in 0..3 }.toMutableList()
+                drugFiltered.addAll(peopleService.drug)
+                //when (companyRepository.getByPk(company.pk!!).prefs!!.drugProvider!!) {
+                    /*"QUEST" -> */Quest(drugFiltered, company.pk!!, driver, credentialRepository)
+                //}
+                people.addAll(PersonList.list)
+                val completeFilter = people.filter { it.onboard.background == 2 && it.onboard.drug == 4 && it.onboard.videos }.toMutableList()
+                for (person in completeFilter) {
+                    person.status = 2
+                    repository.save(person)
                 }
+                //Onboarding(completeFilter, drivers[0])
+                driver.close()
+                Emailer(company.email!!).sendDaRecap()
             }
-            val drugFiltered = people.filter { it.onboard.background == 2 && it.onboard.drug in 0..3 }.toMutableList()
-            drugFiltered.addAll(peopleService.drug)
-            when (companyRepository.getByPk(company.pk!!).prefs!!.drugProvider!!) {
-                "QUEST" -> Quest(drugFiltered, company.pk!!, com.kutzlerstudios.onboardtrackers.models.company.Credential(1, "1",1,"KutzlerA001", "OrderM0r3Drug73575Please2!", "1"), drivers[0])
-            }
-            people.addAll(PersonList.list)
-            val completeFilter = people.filter { it.onboard.background == 2 && it.onboard.drug == 4 && it.onboard.videos }.toMutableList()
-            for(person in completeFilter){
-                person.status = 2
-                repository.save(person)
-            }
-            //Onboarding(completeFilter, drivers[0])
-            drivers[0].close()
-            Emailer("cncdin1@cnclogistics.biz", repository, companyRepository).sendDaRecap()
         }
     }
 
@@ -59,9 +69,10 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
 
 
     private fun setup(){
-        for(z in threads downTo 1){
-            startDriver()
-        }
+        startDriver()
+        //for(z in threads downTo 1){
+        //    startDriver()
+        //}
     }
 
     private fun startDriver() {
@@ -74,6 +85,6 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
         options.addArguments("--disable-dev-shm-usage")
         options.addArguments("--disable-browser-side-navigation")
         options.addArguments("--disable-gpu")
-        drivers.add(ChromeDriver(options))
+        driver = (ChromeDriver(options))
     }
 }

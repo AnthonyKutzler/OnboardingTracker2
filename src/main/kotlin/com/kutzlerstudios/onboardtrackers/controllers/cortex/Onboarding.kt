@@ -3,25 +3,28 @@ package com.kutzlerstudios.onboardtrackers.controllers.cortex
 import com.deathbycaptcha.Captcha
 import com.deathbycaptcha.SocketClient
 import com.kutzlerstudios.onboardtrackers.models.Person
+import com.kutzlerstudios.onboardtrackers.models.company.Credential
 import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
+import com.kutzlerstudios.onboardtrackers.repositories.CredentialRepository
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.*
 import javax.imageio.ImageIO
 
-class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : Thread() {
+class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val credentialRepository: CredentialRepository) : Thread() {
+
 
     var peopleOut : MutableList<Person> = mutableListOf()
     var drugList : MutableList<Person> = mutableListOf()
 
-    private lateinit var CORTEXUSER : String
-    private lateinit var CORTEXPASS : String
+    private lateinit var credential: Credential
 
     private var captchaCounter = 0
 
@@ -30,6 +33,7 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
             //startDriver()
             runCortex()
         } catch (ignored: Exception) {
+            ignored.printStackTrace()
         }
     }
 
@@ -41,7 +45,7 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
 
     @Throws(java.lang.Exception::class)
     private fun runCortex() {
-        setupCreentials()
+        setupCredentials()
         for (person in peopleIn) {
             val temp = checkCortex(person)
             if(temp.onboard.background == 2 && (temp.onboard.drug in 0..3))  drugList.add(temp) else peopleOut.add(temp)
@@ -151,10 +155,10 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.id("ap_email"))))
             var element: WebElement = driver.findElement(By.id("ap_email"))
             element.clear()
-            element.sendKeys(CORTEXUSER)
+            element.sendKeys(credential.user)
             element = driver.findElement(By.id("ap_password"))
             element.clear()
-            element.sendKeys(CORTEXPASS)
+            element.sendKeys(credential.pass)
             element = driver.findElement(By.id("signInSubmit"))
             element.click()
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.id("ap_email"))))
@@ -174,8 +178,8 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
             val cap: WebElement = driver.findElement(By.xpath("//*[@id=\"auth-captcha-image\"]"))
             val arrScreen: ByteArray = (driver as TakesScreenshot).getScreenshotAs(OutputType.BYTES)
             val imageScreen = ImageIO.read(ByteArrayInputStream(arrScreen))
-            val capDimension: Dimension = cap.getSize()
-            val capLocation: Point = cap.getLocation()
+            val capDimension: Dimension = cap.size
+            val capLocation: Point = cap.location
             val imgCap = imageScreen.getSubimage(capLocation.x, capLocation.y, capDimension.width, capDimension.height)
             val os = ByteArrayOutputStream()
             ImageIO.write(imgCap, "png", os)
@@ -183,7 +187,7 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
             val res: Captcha = client.decode(ByteArrayInputStream(os.toByteArray()))
             if (res.isSolved && res.isCorrect) {
                 println("Captcha Correct")
-                driver.findElement(By.id("ap_password")).sendKeys(CORTEXPASS)
+                driver.findElement(By.id("ap_password")).sendKeys(credential.pass)
                 val captcha: WebElement = driver.findElement(By.xpath("//*[@id=\"auth-captcha-guess\"]"))
                 val letters: CharArray = res.text.toCharArray()
                 for (letter in letters) {
@@ -215,8 +219,7 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver) : T
         driver = ChromeDriver(options)
     }
 
-    private fun setupCreentials(){
-        CORTEXUSER = ""
-        CORTEXPASS = ""
+    private fun setupCredentials(){
+        credential = credentialRepository!!.findAllByCompanyAndType(peopleIn[0].company.pk!!, "Cortex")
     }
 }

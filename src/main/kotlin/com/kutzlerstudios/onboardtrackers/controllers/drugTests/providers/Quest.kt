@@ -1,15 +1,19 @@
 package com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers
 
+import com.kutzlerstudios.onboardtrackers.controllers.Emailer
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.DrugTest
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.company.Company
 import com.kutzlerstudios.onboardtrackers.models.company.Credential
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
+import com.kutzlerstudios.onboardtrackers.repositories.CredentialRepository
+import com.kutzlerstudios.onboardtrackers.services.GmailService
 import com.kutzlerstudios.onboardtrackers.services.TwilioHelper
 import com.opencsv.CSVWriter
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
 import java.lang.Thread.sleep
 import java.nio.file.Files
@@ -18,7 +22,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Quest(var peopleIn : List<Person>, var company: Int, var credential: Credential, var driver : WebDriver) : DrugTest {
+class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDriver, val credentialRepository: CredentialRepository) : DrugTest {
 
     var list = PersonList
     private var passwordEmailSent = false
@@ -106,7 +110,7 @@ class Quest(var peopleIn : List<Person>, var company: Int, var credential: Crede
         for(person in people){
             writer.writeNext(arrayOf(person.phone, person.firstName.replace("[^a-zA-Z]", " "),
                     person.lastName.replace("[^a-zA-Z]", " "),
-                    person.phone, "", credential.additional, "FMCSA", "", "65304N", "Split", "Pre-Employment",
+                    person.phone, "", getCredentials().additional, "FMCSA", "", "65304N", "Split", "Pre-Employment",
                     LocalDate.now().plus(2, ChronoUnit.WEEKS).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
                     "1100", "", "No", person.email))
             //try catch ApiException
@@ -133,14 +137,13 @@ class Quest(var peopleIn : List<Person>, var company: Int, var credential: Crede
 
     override fun loginError() {
         if(!passwordEmailSent) {
-            //TODO: LOGIN ERROR
-
+            Emailer("anthonykutzler@gmail.com").sendQuestEmail(peopleIn[0].company.email!!, "QUEST Password is Expiring")
             passwordEmailSent = true
         }
     }
 
     override fun getCredentials(): Credential {
-        return credential
+        return credentialRepository.findAllByCompanyAndType(company)
     }
 
     override fun sendReminder(person: Person) {

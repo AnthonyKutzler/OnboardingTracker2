@@ -18,7 +18,11 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import javax.security.auth.Subject
 
-class Emailer(var from: String, @Autowired var peopleRepository: PeopleRepository, @Autowired var companyRepository: CompanyRepository) {
+class Emailer(var from: String) {
+
+    @Autowired lateinit var peopleRepository: PeopleRepository
+
+    @Autowired lateinit var companyRepository: CompanyRepository
 
     @Autowired
     private lateinit var onboardRepository: OnboardRepository
@@ -94,10 +98,10 @@ Sincerely, """
         return builder.toString()
     }
 
-    private fun buildPeopleLists(): List<List<Person>>{
+    private fun buildPeopleLists(): List<List<Person>>{//TODO BUILD EXTERNALLY
         var parent = mutableListOf<List<Person>>()
         for(company in companyRepository.findAll()){
-            parent.add(peopleRepository.getAllByCompanyAndStatusLessThan(company.pk!!))
+            parent.add(peopleRepository.getAllByCompanyPkAndStatusLessThan(company.pk!!))
         }
         return parent
     }
