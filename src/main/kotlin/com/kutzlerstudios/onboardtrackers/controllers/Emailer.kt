@@ -3,11 +3,9 @@ package com.kutzlerstudios.onboardtrackers.controllers
 import com.google.api.services.gmail.model.Message
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
-import com.kutzlerstudios.onboardtrackers.repositories.OnboardRepository
 import com.kutzlerstudios.onboardtrackers.repositories.PeopleRepository
 import com.kutzlerstudios.onboardtrackers.services.GmailService
 import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.ByteArrayOutputStream
 import java.lang.StringBuilder
 import java.time.LocalDate
@@ -16,16 +14,9 @@ import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import javax.security.auth.Subject
 
-class Emailer(var from: String) {
+class Emailer(var from: String, private var peopleRepository: PeopleRepository, private var companyRepository: CompanyRepository) {
 
-    @Autowired lateinit var peopleRepository: PeopleRepository
-
-    @Autowired lateinit var companyRepository: CompanyRepository
-
-    @Autowired
-    private lateinit var onboardRepository: OnboardRepository
 
     private var subject: String = ""
 
@@ -53,55 +44,60 @@ Sincerely, """
         var people = buildPeopleLists()
         subject = "Onboarding Daily Recap ${LocalDate.now()}"
         for(peopleList in people){
-            var to = ""
-            var sBuilder = StringBuilder("Changes to DAs: \n")
-            for(person in peopleList){
-                if(person.onboard.pk != person.checked){
+            if(peopleList.isNotEmpty()) {
+                var to = peopleList[0].company.email!!
+                var sBuilder = StringBuilder("Changes to DAs: \n")
+                for (person in peopleList) {
                     sBuilder.append(getChanges(person)).append("\n")
-                    person.checked = person.onboard.pk
+                    person.bg = person.background
+                    person.dt = person.drug
+                    person.vids = person.videos
                     peopleRepository.save(person)
                     to = person.company.email!!
+
                 }
+                sendEmail(to, subject, sBuilder.toString())
             }
-            sendEmail(to, subject, sBuilder.toString())
         }
     }
 
     fun getChanges(person: Person) : String{
-        val onboard = onboardRepository.findByPk(person.checked!!)
         val builder = StringBuilder("${person.firstName} ${person.lastName}\n")
-        if(person.onboard.background != onboard.background){
-            builder.append("\t")
-            when (person.onboard.background){
-                -1 -> builder.append("Background: Needs Review(equivalent to Failed")
-                1 -> builder.append("Background: Pending")
-                2 -> builder.append("Background: Meets Requirements")
+        if(person.status!! != -1) {
+            if (person.background != person.bg) {
+                builder.append("\t")
+                when (person.background) {
+                    -1 -> builder.append("Background: Needs Review(equivalent to Failed)")
+                    1 -> builder.append("Background: Pending")
+                    2 -> builder.append("Background: Meets Requirements")
+                }
+                builder.append("\n")
             }
-            builder.append("\n")
-        }
-        if(person.onboard.drug != onboard.drug){
-            builder.append("\t")
-            when (person.onboard.drug){
-                -3 -> builder.append("Drug: Failed(Positive)")
-                -2 -> builder.append("Drug: Failed(Refusal)")
-                -1 -> builder.append("Drug: Failed(Expired)")
-                1 -> builder.append("Drug: Scheduled")
-                2 -> builder.append("Drug: Collected")
-                3 -> builder.append("Drug: At Lab/Mro")
-                4 -> builder.append("Drug: Passed(Negative)")
+            if (person.drug != person.dt) {
+                builder.append("\t")
+                when (person.drug) {
+                    -3 -> builder.append("Drug: Failed(Positive)")
+                    -2 -> builder.append("Drug: Failed(Refusal)")
+                    -1 -> builder.append("Drug: Failed(Expired)")
+                    1 -> builder.append("Drug: Scheduled")
+                    2 -> builder.append("Drug: Collected")
+                    3 -> builder.append("Drug: At Lab/Mro")
+                    4 -> builder.append("Drug: Passed(Negative)")
+                }
+                builder.append("\n")
             }
-            builder.append("\n")
-        }
-        if(person.onboard.videos != onboard.videos){
-            builder.append("\t Videos: Completed\n")
-        }
+            if (person.videos != person.vids) {
+                builder.append("\t Videos: Completed\n")
+            }
+        }else
+            builder.append("\t").append("Offboarded").append("\n")
         return builder.toString()
     }
 
     private fun buildPeopleLists(): List<List<Person>>{//TODO BUILD EXTERNALLY
         var parent = mutableListOf<List<Person>>()
         for(company in companyRepository.findAll()){
-            parent.add(peopleRepository.getAllByCompanyPkAndStatusLessThan(company.pk!!))
+            parent.add(peopleRepository.getAlByCompanyAndChanges(company.pk!!))
         }
         return parent
     }
@@ -123,7 +119,7 @@ Sincerely, """
         val props = Properties()
         val session = Session.getDefaultInstance(props, null)
         val email = MimeMessage(session)
-        email.setFrom(InternetAddress(from))
+        email.setFrom(InternetAddress("anthonykutzler@gmail.com"))
         email.addRecipient(javax.mail.Message.RecipientType.TO, InternetAddress(to))
         email.subject = subject
         email.setText(body)

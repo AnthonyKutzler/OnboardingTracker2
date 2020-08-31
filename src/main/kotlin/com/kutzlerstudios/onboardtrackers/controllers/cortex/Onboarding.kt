@@ -4,21 +4,20 @@ import com.deathbycaptcha.Captcha
 import com.deathbycaptcha.SocketClient
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.company.Credential
-import com.kutzlerstudios.onboardtrackers.repositories.CompanyRepository
+import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
 import com.kutzlerstudios.onboardtrackers.repositories.CredentialRepository
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.*
 import javax.imageio.ImageIO
 
-class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val credentialRepository: CredentialRepository) : Thread() {
+class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val credentialRepository: CredentialRepository) : Thread() {
 
 
     var peopleOut : MutableList<Person> = mutableListOf()
@@ -37,31 +36,30 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val
         }
     }
 
-    fun setDrugTest(){
-        for(person in peopleIn){
-            //TODO: IMPLEMENT
-        }
-    }
-
     @Throws(java.lang.Exception::class)
     private fun runCortex() {
         setupCredentials()
+        var lists = PersonList
         for (person in peopleIn) {
-            val temp = checkCortex(person)
-            if(temp.onboard.background == 2 && (temp.onboard.drug in 0..3))  drugList.add(temp) else peopleOut.add(temp)
+            var personA = checkCortex(person)
+            lists.add(personA)
+
         }
     }
 
-
     private fun checkCortex(personA: Person): Person {
         var person = personA
-        try {
-            return checkProfile(person)
-        } catch (nse: Exception) {
+        try{
+            while (!cortexLogin()){}
+        }catch (e: org.openqa.selenium.NoSuchElementException) {
             try {
                 return checkProfile(person)
-            } catch (nse2: Exception) {
-                person = checkDetails(person)
+            } catch (nse: Exception) {
+                try {
+                    return checkProfile(person)
+                } catch (nse2: Exception) {
+                    person = checkDetails(person)
+                }
             }
         }
         return person
@@ -69,10 +67,12 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val
 
     private fun checkProfile(person: Person) : Person{
         setupCortex(person.email)
-        person.onboard.background = checkBackground()
-        if(person.onboard.background > 0)
+        person.background = checkBackground()
+        if(person.background > 0)
             person.status = 1
-        person.onboard.videos = checkVideos()
+        if(person.background < 0)
+            person.status = -1
+        person.videos = checkVideos()
         if (person.phone == "")
             person.phone = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[1]/div/div[2]/div[2]/div[1]/div[3]/span")).text
         return person
@@ -81,6 +81,8 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val
 
     private fun checkBackground(): Int {
         try {
+            val status = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[1]/div/div[2]/div[1]/div/span[1]")).text.toLowerCase()
+            if (status.contains("offboard")) return -1
             val wait = WebDriverWait(driver, 20)
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[2]/div/div[2]/div[8]/div[1]"))))
             val bgClass = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[2]/div/div[2]/div[8]/div[1]")).getAttribute("class")
@@ -107,13 +109,13 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val
         driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[1]/div[1]/button")).sendKeys(Keys.SPACE)
         Thread.sleep(3000)
         var x = 0
-        person.onboard.background = -1
+        person.background = -1
         val elements = driver.findElements(By.xpath("/html/body/div[1]/main/div/div/div/main/div[3]/div[2]/div[1]/table/tbody/*"))
         for(element in elements){
-            val elementName = driver.findElement(By.xpath("./td[1]/a")).text.split(" ")
+            val elementName = element.findElement(By.xpath("./td[1]/a")).text.split(" ")
             if (element.findElement(By.xpath("./td[1]/a")).text.split(" ")[0].trim() == person.firstName &&
                     element.findElement(By.xpath("./td[7]")).text.contains("Onboard")) {
-                person.onboard.background = 0
+                person.background = 0
                 val y = element.findElement(By.xpath("./td[6]")).text.split("/")[0].trim().toInt()
                 if (y > x) {
                     x = y
@@ -128,16 +130,19 @@ class Onboarding(var peopleIn : MutableList<Person>, var driver : WebDriver, val
     private fun setupCortex(email: String) {
         val wait = WebDriverWait(driver, 15)
         wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//*[@id=\"email-input\"]"))))
+        driver.findElement(By.xpath("//*[@id=\"email-input\"]")).clear()
         driver.findElement(By.xpath("//*[@id=\"email-input\"]")).sendKeys(email)
         wait.until(ExpectedConditions.textToBePresentInElement(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[1]/div[1]/button")), "Search")) //elementToBeClickable(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[1]/button")));
         driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[1]/div[1]/button")).sendKeys(Keys.SPACE)
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[2]/div[1]/table/tbody/tr/td[1]/a")))
         driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[2]/div[1]/table/tbody/tr/td[1]/a")).click()
-        driver.switchTo().window(ArrayList(driver.windowHandles)[1])
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[1]")))
-        driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[1]")).click()
         driver.close()
         driver.switchTo().window(ArrayList(driver.windowHandles)[0])
+        //driver.switchTo().window(ArrayList(driver.windowHandles)[1])
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[1]")))
+        driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[1]")).click()
+        //driver.close()
+        //driver.switchTo().window(ArrayList(driver.windowHandles)[0])
     }
 
     @Throws(NoSuchElementException::class)

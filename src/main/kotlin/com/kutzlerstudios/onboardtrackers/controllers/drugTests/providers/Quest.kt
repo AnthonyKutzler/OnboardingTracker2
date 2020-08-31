@@ -15,6 +15,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
+import java.lang.Exception
 import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -22,15 +23,16 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDriver, val credentialRepository: CredentialRepository) : DrugTest {
+class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDriver, val emailer: Emailer, val credentialRepository: CredentialRepository) : DrugTest {
 
+    var people = mutableListOf<Person>()
     var list = PersonList
     private var passwordEmailSent = false
     private var attemptCount = 0
 
 
-    fun runDt(){
-        super.runDrugTest(list.dtList)
+    override fun runDt(){
+        super.runDrugTest(peopleIn)
     }
 
     override fun checkResults(person: Person): Person {
@@ -43,6 +45,9 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
         } catch (e: TimeoutException) {
             attemptCount++
             return checkResults(person)
+        }catch (ex : Exception){
+            login(getCredentials())
+            checkResults(person)
         }
         try {
             driver.findElement(By.xpath("//*[@id=\"flash\"]"))
@@ -57,20 +62,21 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
             driver.findElement(By.xpath("//*[@id=\"search-boxes\"]/div/input[14]")).click()
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//*[@id=\"results-table\"]"))))
             val elements = driver.findElements(By.xpath("//*[@id=\"table-items\"]/*"))
+            person.drug = 0
             for (element in elements) {
                 val name = element.findElements(By.tagName("td"))[2].text.toLowerCase().split(",").toTypedArray()
                 if (!(name[0].trim { it <= ' ' } == person.lastName.toLowerCase().replace("[-]".toRegex(), " ") && name[1].trim { it <= ' ' } == person.firstName.toLowerCase().replace("[-]".toRegex(), " "))) continue
-                val resultText = element.findElements(By.tagName("td"))[7].text.toLowerCase()
-                val result = person.onboard.drug
+                var resultText = element.findElements(By.tagName("td"))[7].text.toLowerCase()
+                var result = person.drug
                 if (result < 6) {
-                    person.onboard.drug = if (resultText.contains("neg")) 4
+                    person.drug = (if (resultText.contains("neg")) 4
                     else if (resultText.contains("mro") || resultText.contains("lab")) 3
                     else if (resultText.contains("collec")) 2
                     else if (resultText.contains("order") || resultText.contains("suspend") && result < 4) 1
                     else if ((resultText.contains("expir"))) -1
                     else if((resultText.contains("cancel") || resultText.contains("unable") || resultText.contains("refus")) && result < 3) -2
                     else if (resultText.contains("pos") && result < 3) -3
-                    else 0
+                    else 0)
                 }
             }
             person
@@ -97,8 +103,8 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
     }
 
     @Throws(java.io.IOException::class)
-    override fun setupNewTests(people: List<Person>) {
-        if(people.isEmpty()) return
+    override fun setupNewTests() {
+        if(PersonList.newDt.isEmpty()) return
         val writer = CSVWriter(Files.newBufferedWriter(Paths.get("/home/gob/dt.csv")),
                 CSVWriter.DEFAULT_SEPARATOR,
                 CSVWriter.NO_QUOTE_CHARACTER,
@@ -137,7 +143,8 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
 
     override fun loginError() {
         if(!passwordEmailSent) {
-            Emailer("anthonykutzler@gmail.com").sendQuestEmail(peopleIn[0].company.email!!, "QUEST Password is Expiring")
+            emailer.from = "anthonykutzler@gmail.com"
+            emailer.sendQuestEmail(peopleIn[0].company.email!!, "QUEST Password is Expiring")
             passwordEmailSent = true
         }
     }

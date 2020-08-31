@@ -17,4 +17,9 @@ class OnboardRestController(private val peopleRepository: PeopleRepository, priv
     fun runOnboarding(){
             MasterController(peopleRepository, companyRepository, credentialRepository).run()
     }
+
+    @GetMapping("/recap")
+    fun sendRecap(){
+        MasterController(peopleRepository, companyRepository, credentialRepository).daRecapEmail()
+    }
 }

@@ -56,8 +56,8 @@ Sincerely, CNC Management"""
         }
         try {
             Twilio.init(SID, TOKEN)
-            Message.creator(PhoneNumber("+1" + to.replace("\\D+".toRegex(), "")), PhoneNumber("+16308668965") /*new PhoneNumber("+15005550006")*/, message).create()
-            //println("$text text Sent to $to")
+            //Message.creator(PhoneNumber("+1" + to.replace("\\D+".toRegex(), "")), PhoneNumber("+16308668965") /*new PhoneNumber("+15005550006")*/, message).create()
+            println("$text text Sent to $to")
         } catch (ignored: Exception) {
         }
     }

@@ -6,25 +6,27 @@ import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
 
 interface DrugTest {
 
-
+    fun runDt()
 
     fun runDrugTest(people : List<Person>) {
-        val list = PersonList
+        var list = PersonList
         if(login(getCredentials())) {
             for (person in people) {
                 val person1 = checkResults(person)
-                if (person1.onboard.drug == 0)
-                    list.dtList.add(person1)
+                if (person1.drug == 0) {
+                    person1.drug = 1
+                    list.newDt.add(person1)
+                }
                 else
-                    list.list.add(person1)
+                    list.add(person1)
             }
-            setupNewTests(list.dtList)
+            setupNewTests()
         } else loginError()
     }
 
     fun checkResults(person: Person) : Person
 
-    fun setupNewTests(people: List<Person>)
+    fun setupNewTests()
 
     fun login(credentials: Credential) : Boolean
 
