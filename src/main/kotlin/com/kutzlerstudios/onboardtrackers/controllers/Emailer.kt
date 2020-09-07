@@ -102,6 +102,30 @@ Sincerely, """
         return parent
     }
 
+    fun sendBreakdownEmail(co: Int){
+        val company = companyRepository.getByPk(co)
+        if(peopleRepository.countNewInLast7(co) >= 7) {
+            val builder = StringBuilder("Onboarding Breakdown(at/waiting on)\n")
+            builder.append("\tPassed: ").append(peopleRepository.countPassed(co)).append("\n")
+            builder.append("\t\tVideos: ").append(peopleRepository.countVideos(co)).append("\n")
+            builder.append("\tDrug Test").append("\n")
+            builder.append("\t\tAt Lab: ").append(peopleRepository.countDrug(3, co)).append("\n")
+            builder.append("\t\tCollected: ").append(peopleRepository.countDrug(2, co)).append("\n")
+            builder.append("\t\tScheduled: ").append(peopleRepository.countDrug(1, co)).append("\n")
+            builder.append("\tBackground").append("\n")
+            builder.append("\t\tPending: ").append(peopleRepository.countBackgrounds(1, co)).append("\n")
+            builder.append("\t\tNot Started: ").append(peopleRepository.countBackgrounds(0, co)).append("\n")
+            builder.append("\n\n").append("Failure Stats").append("\n")
+            builder.append("\tFailed/Offboarded: ").append(peopleRepository.countFailed(co))
+            sendEmail(company.email!!, "Onboard Breakdown", builder.toString())
+        }
+
+    }
+
+    fun sendCollectedEmail(person: Person){
+        sendEmail(person.company.email!!, "DT Collected ${person.firstName} ${person.lastName}", "${person.firstName} ${person.lastName}, has taken their drug test")
+    }
+
     @Throws(java.lang.Exception::class)
     private fun sendEmail(to: String, subject: String, body: String) {
         val email: MimeMessage = createMessage(to, subject, body)

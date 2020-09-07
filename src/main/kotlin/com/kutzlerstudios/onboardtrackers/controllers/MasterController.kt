@@ -24,6 +24,8 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
         setup()
         var pLists = PersonList
         for(company in companyRepository.findAllBy()) {
+            pLists.clearAll()
+            people.clear()
             val emailer = Emailer(company.email!!, repository, companyRepository)
             pLists.addAll(repository.getAlByCompanyAndStatus(company.pk!!))
             people.addAll(pLists.cortex)
@@ -46,7 +48,6 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
                 people.addAll(pLists.drug)
                 pLists.drug.clear()
                 when(credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()){
-                    "xyz" -> ("")
                     else -> Quest(people, company.pk!!, drivers[0], emailer, credentialRepository).runDt()
                 }
 

@@ -23,7 +23,9 @@ class Person(@Id @GeneratedValue(strategy= GenerationType.IDENTITY) var pk : Int
              @NotNull var mentor : Boolean,
              @NotNull var bg : Int,
              @NotNull var dt : Int,
-             @NotNull var vids : Boolean){
+             @NotNull var vids : Boolean,
+             @NotNull var bgc : Boolean? = false,
+             @NotNull var dtc : Boolean? = false){
 
 
 /*

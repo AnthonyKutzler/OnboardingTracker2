@@ -65,19 +65,15 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
             person.drug = 0
             for (element in elements) {
                 val name = element.findElements(By.tagName("td"))[2].text.toLowerCase().split(",").toTypedArray()
-                if (!(name[0].trim { it <= ' ' } == person.lastName.toLowerCase().replace("[-]".toRegex(), " ") && name[1].trim { it <= ' ' } == person.firstName.toLowerCase().replace("[-]".toRegex(), " "))) continue
-                var resultText = element.findElements(By.tagName("td"))[7].text.toLowerCase()
-                var result = person.drug
-                if (result < 6) {
-                    person.drug = (if (resultText.contains("neg")) 4
-                    else if (resultText.contains("mro") || resultText.contains("lab")) 3
-                    else if (resultText.contains("collec")) 2
-                    else if (resultText.contains("order") || resultText.contains("suspend") && result < 4) 1
-                    else if ((resultText.contains("expir"))) -1
-                    else if((resultText.contains("cancel") || resultText.contains("unable") || resultText.contains("refus")) && result < 3) -2
-                    else if (resultText.contains("pos") && result < 3) -3
-                    else 0)
-                }
+                if ((name[0].trim() == person.lastName.toLowerCase().replace("[^a-zA-Z]+".toRegex(), " ").trim() &&
+                                name[1].trim() == person.firstName.toLowerCase().replace("[^a-zA-Z]+".toRegex(), " ").trim())) {
+                    var resultText = element.findElements(By.tagName("td"))[7].text.toLowerCase()
+                    var result = person.drug
+                    if (result < 6) {
+                        person.drug = checkResultText(person, resultText, result)
+                    }
+                }else
+                    person.drug = checkResultText(person,"", person.drug)
             }
             person
         } catch (e1: ElementClickInterceptedException) {
@@ -86,6 +82,21 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
             attemptCount++
             checkResults(person)
         }
+    }
+
+    private fun checkResultText(person: Person, resultText : String, result : Int) : Int{
+        return (if (resultText.contains("neg")) 4
+        else if (resultText.contains("mro") || resultText.contains("lab")) 3
+        else if (resultText.contains("collec")){
+            if(result != 2){
+                emailer.sendCollectedEmail(person)
+            }
+            2}
+        else if (resultText.contains("order") || resultText.contains("suspend") && result < 2) 1
+        else if ((resultText.contains("expir"))) -1
+        else if ((resultText.contains("cancel") || resultText.contains("unable") || resultText.contains("refus")) && result < 1) -2
+        else if (resultText.contains("pos") && result < 1) -3
+                else result)
     }
 
     override fun login(credentials: Credential) : Boolean {
@@ -113,10 +124,13 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
         writer.writeNext(arrayOf("Primary ID", "First Name", "Last Name", "Primary Phone", "Date of Birth", "Account Number", "Modality",
                 "Client Site Location", "Order Code(s)", "Collection Type", "Reason for Test", "Order Expiration Date",
                 "Order Expiration Time", "Collection Site Code", "Observed", "Email(s)"))
-        for(person in people){
-            writer.writeNext(arrayOf(person.phone, person.firstName.replace("[^a-zA-Z]", " "),
-                    person.lastName.replace("[^a-zA-Z]", " "),
-                    person.phone, "", getCredentials().additional, "FMCSA", "", "65304N", "Split", "Pre-Employment",
+        for(person in PersonList.newDt){
+            writer.writeNext(arrayOf(person.phone.replace("\\D+".toRegex(), ""),
+                    person.firstName.replace("[^a-zA-Z]+".toRegex(), " "),
+                    person.lastName.replace("[^a-zA-Z]+".toRegex(), " "),
+                    person.phone, "",
+                    getCredentials().additional,
+                    "FMCSA", "", "65304N", "Split", "Pre-Employment",
                     LocalDate.now().plus(2, ChronoUnit.WEEKS).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
                     "1100", "", "No", person.email))
             //try catch ApiException
