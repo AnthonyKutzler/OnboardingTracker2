@@ -21,9 +21,10 @@ class GmailService {
 
     @Throws(IOException::class)
     private fun getCredentials(HTTP_TRANSPORT: NetHttpTransport): Credential {
+        println(pathToJarDir())
         val CREDENTIALS_FILE_PATH = CREDENTIALS
         val `in` = FileInputStream(CREDENTIALS_FILE_PATH)
-                ?: throw FileNotFoundException("Resource not found: $CREDENTIALS_FILE_PATH")
+                //?: throw FileNotFoundException("Resource not found: $CREDENTIALS_FILE_PATH")
         val clientSecrets: GoogleClientSecrets = GoogleClientSecrets.load(JSON_FACTORY, InputStreamReader(`in`))
         val flow = GoogleAuthorizationCodeFlow.Builder(
                 HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)

@@ -27,7 +27,7 @@ interface PeopleRepository : CrudRepository<Person, Long> {
     @Query("SELECT COUNT(p) FROM Person p WHERE p.status = 2 AND p.company.pk = ?1")
     fun countPassed(company: Int) : Int
 
-    @Query("SELECT COUNT(p) FROM Person p WHERE p.company.pk = ?1 AND p.onboard_date < DATE_SUB(NOW(), INTERVAL 7 DAY)")
+    @Query("SELECT COUNT(p) FROM Person p WHERE p.company.pk = ?1")
     fun countNewInLast7(company: Int): Int
 
 }
