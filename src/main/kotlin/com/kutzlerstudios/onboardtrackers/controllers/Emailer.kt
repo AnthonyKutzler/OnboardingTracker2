@@ -104,7 +104,7 @@ Sincerely, """
 
     fun sendBreakdownEmail(co: Int){
         val company = companyRepository.getByPk(co)
-        if(peopleRepository.countNewInLast7(co) >= 7) {
+        //if(peopleRepository.countNewInLast7(co) >= 7) {
             val builder = StringBuilder("Onboarding Breakdown(at/waiting on)\n")
             builder.append("\tPassed: ").append(peopleRepository.countPassed(co)).append("\n")
             builder.append("\t\tVideos: ").append(peopleRepository.countVideos(co)).append("\n")
@@ -118,7 +118,7 @@ Sincerely, """
             builder.append("\n\n").append("Failure Stats").append("\n")
             builder.append("\tFailed/Offboarded: ").append(peopleRepository.countFailed(co))
             sendEmail(company.email!!, "Onboard Breakdown", builder.toString())
-        }
+        //}
 
     }
 
@@ -144,6 +144,7 @@ Sincerely, """
         val session = Session.getDefaultInstance(props, null)
         val email = MimeMessage(session)
         email.setFrom(InternetAddress("anthonykutzler@gmail.com"))
+        println(to)
         email.addRecipient(javax.mail.Message.RecipientType.TO, InternetAddress(to))
         email.subject = subject
         email.setText(body)

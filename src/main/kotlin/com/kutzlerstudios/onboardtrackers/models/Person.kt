@@ -3,6 +3,7 @@ package com.kutzlerstudios.onboardtrackers.models
 import com.kutzlerstudios.onboardtrackers.models.company.Company
 import org.jetbrains.annotations.NotNull
 import java.lang.StringBuilder
+import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity

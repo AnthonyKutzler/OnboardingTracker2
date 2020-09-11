@@ -14,6 +14,10 @@ import org.openqa.selenium.support.ui.WebDriverWait
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.sql.Date
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -65,9 +69,9 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
         return person
     }
 
-    private fun checkProfile(person: Person) : Person{
-        setupCortex(person.email)
-        person.background = checkBackground()
+    private fun checkProfile(person1: Person) : Person{
+        setupCortex(person1.email)
+        var person = checkBackground(person1)
         if(person.background > 0)
             person.status = 1
         if(person.background < 0)
@@ -79,21 +83,37 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
     }
 
 
-    private fun checkBackground(): Int {
+    private fun checkBackground(person : Person): Person {
+        var person1 = person
         try {
             val status = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[1]/div/div[2]/div[1]/div/span[1]")).text.toLowerCase()
-            if (status.contains("offboard")) return -1
+            if (status.contains("offboard")){
+                person1.background = -1
+                return person1
+            }
             val wait = WebDriverWait(driver, 20)
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[2]/div/div[2]/div[8]/div[1]"))))
             val bgClass = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[2]/div/div[2]/div[8]/div[1]")).getAttribute("class")
-            return if (bgClass.toLowerCase().contains("error")) -2
-            else if (bgClass.toLowerCase().contains("completed")) 2
-            else if (bgClass.toLowerCase().contains("in-progress")) 1
+            person1.background = if (bgClass.toLowerCase().contains("error")) {
+                //if(person1.background != -2)
+                  //  person1.onboardE = Timestamp(LocalTime.now().toNanoOfDay())
+                -2
+            }
+            else if (bgClass.toLowerCase().contains("completed")) {
+                //if(person1.background != 2)
+                  //  person1.onboardE = Timestamp(LocalTime.now().toNanoOfDay())
+                2
+            }
+            else if (bgClass.toLowerCase().contains("in-progress")){
+                //if(person1.background != 1)
+                  //  person1.onboardS = Timestamp(LocalTime.now().toNanoOfDay())
+                1
+            }
             else if(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[1]/div/div[2]/div[1]/div/span[1]")).text.toLowerCase().contains("offboard")) -1
             else 0
         } catch (ignored: java.lang.Exception) {
         }
-        return 0
+        return person1
     }
 
     private fun checkVideos(): Boolean {
