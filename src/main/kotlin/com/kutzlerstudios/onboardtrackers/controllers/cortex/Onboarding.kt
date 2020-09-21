@@ -21,12 +21,11 @@ import java.time.LocalTime
 import java.util.*
 import javax.imageio.ImageIO
 
-class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val credentialRepository: CredentialRepository) : Thread() {
+class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepository) : Thread() {
 
 
     var peopleOut : MutableList<Person> = mutableListOf()
     var drugList : MutableList<Person> = mutableListOf()
-
     private lateinit var credential: Credential
 
     private var captchaCounter = 0
@@ -43,10 +42,11 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
     @Throws(java.lang.Exception::class)
     private fun runCortex() {
         setupCredentials()
-        var lists = PersonList
-        for (person in peopleIn) {
-            var personA = checkCortex(person)
-            lists.add(personA)
+        val lists = PersonList
+        while (!lists.cortex.isEmpty()) {
+            val person = lists.cortex.remove()
+            val personA = checkCortex(person)
+            lists.add(personA, false, true)
 
         }
     }
@@ -56,13 +56,14 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
         try{
             while (!cortexLogin()){}
         }catch (e: org.openqa.selenium.NoSuchElementException) {
-            try {
-                return checkProfile(person)
+            return try {
+                checkProfile(person)
             } catch (nse: Exception) {
                 try {
-                    return checkProfile(person)
+                    checkProfile(person)
                 } catch (nse2: Exception) {
                     person = checkDetails(person)
+                    checkDetails(person)
                 }
             }
         }
@@ -100,13 +101,13 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
                 -2
             }
             else if (bgClass.toLowerCase().contains("completed")) {
-                //if(person1.background != 2)
-                  //  person1.onboardE = Timestamp(LocalTime.now().toNanoOfDay())
+                if(person1.background != 2)
+                    person1.onboardE = LocalDate.now()
                 2
             }
             else if (bgClass.toLowerCase().contains("in-progress")){
-                //if(person1.background != 1)
-                  //  person1.onboardS = Timestamp(LocalTime.now().toNanoOfDay())
+                if(person1.background != 1)
+                    person1.onboardS = LocalDate.now()
                 1
             }
             else if(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[1]/div/div[2]/div[1]/div/span[1]")).text.toLowerCase().contains("offboard")) -1
@@ -127,18 +128,19 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
         driver.findElement(By.xpath("//*[@id=\"name-input\"]")).sendKeys(person.lastName)
         wait.until(ExpectedConditions.textToBePresentInElement(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[1]/div[1]/button")), "Search"))
         driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div[3]/div[1]/div[1]/button")).sendKeys(Keys.SPACE)
-        Thread.sleep(3000)
+        sleep(3000)
         var x = 0
         person.background = -1
         val elements = driver.findElements(By.xpath("/html/body/div[1]/main/div/div/div/main/div[3]/div[2]/div[1]/table/tbody/*"))
         for(element in elements){
             val elementName = element.findElement(By.xpath("./td[1]/a")).text.split(" ")
-            if (element.findElement(By.xpath("./td[1]/a")).text.split(" ")[0].trim() == person.firstName &&
-                    element.findElement(By.xpath("./td[7]")).text.contains("Onboard")) {
+            if (elementName[0].trim() == person.firstName &&
+                    element.findElement(By.xpath("./td[7]")).text.toLowerCase().contains("onboard")) {
                 person.background = 0
                 val y = element.findElement(By.xpath("./td[6]")).text.split("/")[0].trim().toInt()
                 if (y > x) {
                     x = y
+                    
                     person.email = element.findElement(By.xpath("./td[4]")).text.trim()
                 }
             }
@@ -245,6 +247,6 @@ class Onboarding(var peopleIn: MutableList<Person>, var driver: WebDriver, val c
     }
 
     private fun setupCredentials(){
-        credential = credentialRepository!!.findAllByCompanyAndType(peopleIn[0].company.pk!!, "Cortex")
+        credential = credentialRepository!!.findAllByCompanyAndType(PersonList.getAll()[0].company.pk!!, "Cortex")
     }
 }

@@ -8,17 +8,17 @@ interface DrugTest {
 
     fun runDt()
 
-    fun runDrugTest(people : List<Person>) {
-        var list = PersonList
+    fun runDrugTest() {
+        val list = PersonList
         if(login(getCredentials())) {
-            for (person in people) {
-                val person1 = checkResults(person)
+            while (!list.drug.isEmpty()) {
+                val person1 = checkResults(list.drug.remove())
                 if (person1.drug == 0) {
                     person1.drug = 1
                     list.newDt.add(person1)
                 }
                 else
-                    list.add(person1)
+                    list.add(person1, false, false)
             }
             setupNewTests()
         } else loginError()

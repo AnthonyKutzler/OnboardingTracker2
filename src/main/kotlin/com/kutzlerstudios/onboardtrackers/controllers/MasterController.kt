@@ -16,47 +16,30 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
     private var threads = 3
 
     private var drivers = mutableListOf<WebDriver>()
-    //private lateinit var driver : WebDriver
-
-    private val people = mutableListOf<Person>()
-
     fun run(){
         setup()
         var pLists = PersonList
         for(company in companyRepository.findAllBy()) {
             pLists.clearAll()
-            people.clear()
             val emailer = Emailer(company.email!!, repository, companyRepository)
-            pLists.addAll(repository.getAlByCompanyAndStatus(company.pk!!))
-            people.addAll(pLists.cortex)
+            pLists.addAll(repository.getAlByCompanyAndStatus(company.pk!!), true, true)
             pLists.cortex.clear()
-            if(people.isNotEmpty()) {
+            if(pLists.cortex.isNotEmpty()) {
                 var onboardList = mutableListOf<Onboarding>()
-                for ((index, driver) in drivers.withIndex()) {
-                    //var thread = Onboarding(people, driver, credentialRepository)
-                    val thread = if (index == 0)
-                        Onboarding(people.subList(0, people.size / threads), driver, credentialRepository)
-                    else
-                        Onboarding(people.subList((people.size / threads) * index, (people.size / threads) * (index + 1)), driver, credentialRepository)
-                    //TODO: TRY ME
+                for (driver in drivers) {
+                    val thread = Onboarding(driver, credentialRepository)
                     thread.start()
                     onboardList.add(thread)
                 }
                 for(thread in onboardList)
                     thread.join()
-                people.clear()
-                people.addAll(pLists.drug)
                 pLists.drug.clear()
-                when(credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()){
-                    else -> Quest(people, company.pk!!, drivers[0], emailer, credentialRepository).runDt()
+                for(driver in drivers) {
+                    when (credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()) {
+                        else -> Quest(company.pk!!, driver, emailer, credentialRepository).runDt()
+                    }
                 }
-
-                people.clear()
-                //pLists.reorder()
-                people.addAll(pLists.getAll())
-                repository.saveAll(people)
-                //Onboarding(completeFilter, drivers[0])
-                //driver.close()
+                repository.saveAll(pLists.getAll())
             }
         }
         for(driver in drivers)

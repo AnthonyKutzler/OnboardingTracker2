@@ -25,16 +25,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDriver, val emailer: Emailer, val credentialRepository: CredentialRepository) : DrugTest {
+class Quest(var company: Int, var driver : WebDriver, private val emailer: Emailer, private val credentialRepository: CredentialRepository) : DrugTest {
 
     var people = mutableListOf<Person>()
     var list = PersonList
     private var passwordEmailSent = false
     private var attemptCount = 0
-//    private var robot = Robot()
 
     override fun runDt(){
-        super.runDrugTest(peopleIn)
+        super.runDrugTest()
     }
 
     override fun checkResults(person: Person): Person {
@@ -107,17 +106,9 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
         try {
             driver["https://esp.employersolutions.com/"]
             driver.findElement(By.xpath("//*[@id=\"UserName\"]")).sendKeys(credentials.user)
-            /*val passE = */driver.findElement(By.xpath("//*[@id=\"Password\"]")).sendKeys(credentials.pass)
-            /*var letters = credentials.pass!!.toCharArray()
-            for(letter in letters) {
-                passE.sendKeys(letter.toString())
-                sleep((Math.random() + .5).toLong() * 1200)
-            }*/
-            //println("${credentials.user}, ${credentials.pass}")
-            //println(driver.findElement(By.xpath("//*[@id=\"Password\"]")).text)
-            //type(credentials.pass!!)
+            driver.findElement(By.xpath("//*[@id=\"Password\"]")).sendKeys(credentials.pass)
             driver.findElement(By.xpath("//*[@id=\"loginContainer\"]/div/div/form/fieldset/button")).click()
-        } catch (e: java.lang.Exception) {
+        } catch (e: Exception) {
             ++attemptCount
             login(credentials)
         }
@@ -169,7 +160,7 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
     override fun loginError() {
         if(!passwordEmailSent) {
             emailer.from = "anthonykutzler@gmail.com"
-            emailer.sendQuestEmail(peopleIn[0].company.email!!, "QUEST Password is Expiring")
+            emailer.sendQuestEmail(PersonList.getAll()[0].company.email!!, "QUEST Password is Expiring")
             passwordEmailSent = true
         }
     }
@@ -180,131 +171,6 @@ class Quest(var peopleIn : List<Person>, var company: Int, var driver : WebDrive
 
     override fun sendReminder(person: Person) {
         TwilioHelper(person.company.phone!!, person.phone, 1)
-    }
-
-
-    fun type(characters: CharSequence) {
-        val length = characters.length
-        for (i in 0 until length) {
-            val character = characters[i]
-            type(character)
-        }
-    }
-
-    fun type(character: Char) {
-        when (character) {
-            'a' -> doType(KeyEvent.VK_A)
-            'b' -> doType(KeyEvent.VK_B)
-            'c' -> doType(KeyEvent.VK_C)
-            'd' -> doType(KeyEvent.VK_D)
-            'e' -> doType(KeyEvent.VK_E)
-            'f' -> doType(KeyEvent.VK_F)
-            'g' -> doType(KeyEvent.VK_G)
-            'h' -> doType(KeyEvent.VK_H)
-            'i' -> doType(KeyEvent.VK_I)
-            'j' -> doType(KeyEvent.VK_J)
-            'k' -> doType(KeyEvent.VK_K)
-            'l' -> doType(KeyEvent.VK_L)
-            'm' -> doType(KeyEvent.VK_M)
-            'n' -> doType(KeyEvent.VK_N)
-            'o' -> doType(KeyEvent.VK_O)
-            'p' -> doType(KeyEvent.VK_P)
-            'q' -> doType(KeyEvent.VK_Q)
-            'r' -> doType(KeyEvent.VK_R)
-            's' -> doType(KeyEvent.VK_S)
-            't' -> doType(KeyEvent.VK_T)
-            'u' -> doType(KeyEvent.VK_U)
-            'v' -> doType(KeyEvent.VK_V)
-            'w' -> doType(KeyEvent.VK_W)
-            'x' -> doType(KeyEvent.VK_X)
-            'y' -> doType(KeyEvent.VK_Y)
-            'z' -> doType(KeyEvent.VK_Z)
-            'A' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_A)
-            'B' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_B)
-            'C' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_C)
-            'D' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_D)
-            'E' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_E)
-            'F' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_F)
-            'G' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_G)
-            'H' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_H)
-            'I' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_I)
-            'J' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_J)
-            'K' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_K)
-            'L' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_L)
-            'M' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_M)
-            'N' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_N)
-            'O' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_O)
-            'P' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_P)
-            'Q' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_Q)
-            'R' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_R)
-            'S' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_S)
-            'T' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_T)
-            'U' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_U)
-            'V' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_V)
-            'W' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_W)
-            'X' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_X)
-            'Y' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_Y)
-            'Z' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_Z)
-            '`' -> doType(KeyEvent.VK_BACK_QUOTE)
-            '0' -> doType(KeyEvent.VK_0)
-            '1' -> doType(KeyEvent.VK_1)
-            '2' -> doType(KeyEvent.VK_2)
-            '3' -> doType(KeyEvent.VK_3)
-            '4' -> doType(KeyEvent.VK_4)
-            '5' -> doType(KeyEvent.VK_5)
-            '6' -> doType(KeyEvent.VK_6)
-            '7' -> doType(KeyEvent.VK_7)
-            '8' -> doType(KeyEvent.VK_8)
-            '9' -> doType(KeyEvent.VK_9)
-            '-' -> doType(KeyEvent.VK_MINUS)
-            '=' -> doType(KeyEvent.VK_EQUALS)
-            '~' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_QUOTE)
-            '!' -> doType(KeyEvent.VK_EXCLAMATION_MARK)
-            '@' -> doType(KeyEvent.VK_AT)
-            '#' -> doType(KeyEvent.VK_NUMBER_SIGN)
-            '$' -> doType(KeyEvent.VK_DOLLAR)
-            '%' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_5)
-            '^' -> doType(KeyEvent.VK_CIRCUMFLEX)
-            '&' -> doType(KeyEvent.VK_AMPERSAND)
-            '*' -> doType(KeyEvent.VK_ASTERISK)
-            '(' -> doType(KeyEvent.VK_LEFT_PARENTHESIS)
-            ')' -> doType(KeyEvent.VK_RIGHT_PARENTHESIS)
-            '_' -> doType(KeyEvent.VK_UNDERSCORE)
-            '+' -> doType(KeyEvent.VK_PLUS)
-            '\t' -> doType(KeyEvent.VK_TAB)
-            '\n' -> doType(KeyEvent.VK_ENTER)
-            '[' -> doType(KeyEvent.VK_OPEN_BRACKET)
-            ']' -> doType(KeyEvent.VK_CLOSE_BRACKET)
-            '\\' -> doType(KeyEvent.VK_BACK_SLASH)
-            '{' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_OPEN_BRACKET)
-            '}' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_CLOSE_BRACKET)
-            '|' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_SLASH)
-            ';' -> doType(KeyEvent.VK_SEMICOLON)
-            ':' -> doType(KeyEvent.VK_COLON)
-            '\'' -> doType(KeyEvent.VK_QUOTE)
-            '"' -> doType(KeyEvent.VK_QUOTEDBL)
-            ',' -> doType(KeyEvent.VK_COMMA)
-            '<' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_COMMA)
-            '.' -> doType(KeyEvent.VK_PERIOD)
-            '>' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_PERIOD)
-            '/' -> doType(KeyEvent.VK_SLASH)
-            '?' -> doType(KeyEvent.VK_SHIFT, KeyEvent.VK_SLASH)
-            ' ' -> doType(KeyEvent.VK_SPACE)
-            else -> throw IllegalArgumentException("Cannot type character $character")
-        }
-    }
-
-    private fun doType(vararg keyCodes: Int) {
-        doType(keyCodes, 0, keyCodes.size)
-    }
-
-    private fun doType(keyCodes: IntArray, offset: Int, length: Int) {
-        if (length == 0) {
-            return
-        }
-        //robot.keyPress(keyCodes[offset])
-        doType(keyCodes, offset + 1, length - 1)
-        //robot.keyRelease(keyCodes[offset])
     }
 }
 

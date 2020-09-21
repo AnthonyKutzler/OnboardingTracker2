@@ -4,6 +4,7 @@ import com.kutzlerstudios.onboardtrackers.models.company.Company
 import org.jetbrains.annotations.NotNull
 import java.lang.StringBuilder
 import java.sql.Timestamp
+import java.time.LocalDate
 import javax.persistence.*
 
 @Entity
@@ -26,7 +27,9 @@ class Person(@Id @GeneratedValue(strategy= GenerationType.IDENTITY) var pk : Int
              @NotNull var dt : Int,
              @NotNull var vids : Boolean,
              @NotNull var bgc : Boolean? = false,
-             @NotNull var dtc : Boolean? = false){
+             @NotNull var dtc : Boolean? = false,
+             var onboardS : LocalDate,
+             var onboardE: LocalDate){
 
 
 /*
