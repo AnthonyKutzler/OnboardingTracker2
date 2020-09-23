@@ -1,6 +1,7 @@
 package com.kutzlerstudios.onboardtrackers.controllers
 
 import com.kutzlerstudios.onboardtrackers.controllers.cortex.Onboarding
+import com.kutzlerstudios.onboardtrackers.controllers.drugTests.`interface`.DrugTest
 import com.kutzlerstudios.onboardtrackers.controllers.drugTests.providers.Quest
 import com.kutzlerstudios.onboardtrackers.models.Person
 import com.kutzlerstudios.onboardtrackers.models.drug.PersonList
@@ -18,14 +19,13 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
     private var drivers = mutableListOf<WebDriver>()
     fun run(){
         setup()
-        var pLists = PersonList
+        val pLists = PersonList
         for(company in companyRepository.findAllBy()) {
             pLists.clearAll()
             val emailer = Emailer(company.email!!, repository, companyRepository)
             pLists.addAll(repository.getAlByCompanyAndStatus(company.pk!!), true, true)
-            pLists.cortex.clear()
             if(pLists.cortex.isNotEmpty()) {
-                var onboardList = mutableListOf<Onboarding>()
+                val onboardList = mutableListOf<Onboarding>()
                 for (driver in drivers) {
                     val thread = Onboarding(driver, credentialRepository)
                     thread.start()
@@ -33,11 +33,8 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
                 }
                 for(thread in onboardList)
                     thread.join()
-                pLists.drug.clear()
-                for(driver in drivers) {
-                    when (credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()) {
-                        else -> Quest(company.pk!!, driver, emailer, credentialRepository).runDt()
-                    }
+                when (credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()) {
+                        else -> Quest(company.pk!!, drivers[0], emailer, credentialRepository)
                 }
                 repository.saveAll(pLists.getAll())
             }

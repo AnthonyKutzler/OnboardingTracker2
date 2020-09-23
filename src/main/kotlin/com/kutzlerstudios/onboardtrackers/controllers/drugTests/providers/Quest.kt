@@ -25,12 +25,17 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Quest(var company: Int, var driver : WebDriver, private val emailer: Emailer, private val credentialRepository: CredentialRepository) : DrugTest {
+class Quest(var company: Int, var driver : WebDriver, private val emailer: Emailer, private val credentialRepository: CredentialRepository) : Thread(), DrugTest {
 
     var people = mutableListOf<Person>()
     var list = PersonList
     private var passwordEmailSent = false
     private var attemptCount = 0
+
+    override fun run() {
+        super.runDrugTest()
+    }
+
 
     override fun runDt(){
         super.runDrugTest()

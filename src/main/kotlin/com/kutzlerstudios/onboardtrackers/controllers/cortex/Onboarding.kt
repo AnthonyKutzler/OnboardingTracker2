@@ -28,6 +28,8 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
     var drugList : MutableList<Person> = mutableListOf()
     private lateinit var credential: Credential
 
+    private val lists = PersonList
+
     private var captchaCounter = 0
 
     override fun run() {
@@ -42,13 +44,15 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
     @Throws(java.lang.Exception::class)
     private fun runCortex() {
         setupCredentials()
-        val lists = PersonList
-        while (!lists.cortex.isEmpty()) {
-            val person = lists.cortex.remove()
-            val personA = checkCortex(person)
-            lists.add(personA, false, true)
+        //val lists = PersonList
+        try {
+            while (!lists.cortex.isEmpty()) {
+                val person = lists.cortex.remove()
+                val personA = checkCortex(person)
+                lists.add(personA, false, true)
 
-        }
+            }
+        }catch (e: java.lang.Exception){}
     }
 
     private fun checkCortex(personA: Person): Person {
@@ -63,7 +67,7 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
                     checkProfile(person)
                 } catch (nse2: Exception) {
                     person = checkDetails(person)
-                    checkDetails(person)
+                    checkProfile(person)
                 }
             }
         }
@@ -96,8 +100,8 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
             wait.until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[2]/div/div[2]/div[8]/div[1]"))))
             val bgClass = driver.findElement(By.xpath("//*[@id=\"dsp-onboarding\"]/div/main/div/div[2]/div/div[2]/div/div[2]/div[8]/div[1]")).getAttribute("class")
             person1.background = if (bgClass.toLowerCase().contains("error")) {
-                //if(person1.background != -2)
-                  //  person1.onboardE = Timestamp(LocalTime.now().toNanoOfDay())
+                if(person1.background != -2)
+                    person1.onboardE = LocalDate.now()
                 -2
             }
             else if (bgClass.toLowerCase().contains("completed")) {
@@ -247,6 +251,6 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
     }
 
     private fun setupCredentials(){
-        credential = credentialRepository!!.findAllByCompanyAndType(PersonList.getAll()[0].company.pk!!, "Cortex")
+        credential = credentialRepository.findAllByCompanyAndType(lists.cortex.peek().company.pk!!, "Cortex")
     }
 }

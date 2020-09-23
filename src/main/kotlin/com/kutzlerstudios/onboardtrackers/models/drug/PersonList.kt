@@ -54,7 +54,7 @@ object PersonList {
             add(person, cInit, dInit)
     }
 
-    fun getAll(): List<Person>{
+    fun getAll(): List<Person> {
         val list = mutableListOf<Person>()
         list.addAll(complete)
         list.addAll(drugCom)
