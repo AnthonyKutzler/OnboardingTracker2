@@ -48,7 +48,11 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
         try {
             var person = lists.cortex.poll()
             while (person != null) {
-                val personA = checkCortex(person)
+                var personA = checkCortex(person)
+                if(!personA.statC && personA.status!! < 0){
+                    personA = checkDetails(personA)
+                    personA = checkProfile(personA)
+                }
                 lists.add(personA, false, true)
                 person = lists.cortex.poll()
             }

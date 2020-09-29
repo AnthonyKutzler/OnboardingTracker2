@@ -28,6 +28,7 @@ class Person(@Id @GeneratedValue(strategy= GenerationType.IDENTITY) var pk : Int
              @NotNull var vids : Boolean,
              @NotNull var bgc : Boolean? = false,
              @NotNull var dtc : Boolean? = false,
+             @NotNull var statC : Boolean = false,
              var onboardS : LocalDate,
              var onboardE: LocalDate){
 
