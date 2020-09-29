@@ -13,7 +13,7 @@ class Person(@Id @GeneratedValue(strategy= GenerationType.IDENTITY) var pk : Int
              @NotNull @ManyToOne @JoinColumn(name = "company", referencedColumnName = "pk") var company: Company,
              @NotNull @Column(name = "first_name") var firstName: String,
              @NotNull @Column(name = "last_name") var lastName: String,
-             @NotNull var phone: String,
+             var phone: String,
              @NotNull var email: String,
              @NotNull var referral: String,
              var note: String? = "Nothing",

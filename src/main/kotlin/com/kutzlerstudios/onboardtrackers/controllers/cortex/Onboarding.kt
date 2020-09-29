@@ -46,11 +46,11 @@ class Onboarding(var driver: WebDriver, val credentialRepository: CredentialRepo
         setupCredentials()
         //val lists = PersonList
         try {
-            while (!lists.cortex.isEmpty()) {
-                val person = lists.cortex.remove()
+            var person = lists.cortex.poll()
+            while (person != null) {
                 val personA = checkCortex(person)
                 lists.add(personA, false, true)
-
+                person = lists.cortex.poll()
             }
         }catch (e: java.lang.Exception){}
     }

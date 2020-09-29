@@ -12,14 +12,20 @@ interface DrugTest {
     fun runDrugTest() {
         val list = PersonList
         if(login(getCredentials())) {
-            while (!list.drug.isEmpty()) {
-                val person1 = checkResults(list.drug.remove())
-                if (person1.drug == 0) {
-                    person1.drug = 1
-                    list.newDt.add(person1)
+            var person = list.drug.poll()
+            while (person != null) {
+                val person1 = checkResults(person)
+                when {
+                    person1.drug == 0 -> {
+                        person1.drug = 1
+                        list.newDt.add(person1)
+                    }
+                    person1.drug < 0 -> {
+                        person1.status = -1
+                    }
+                    else -> list.add(person1, false, false)
                 }
-                else
-                    list.add(person1, false, false)
+                person = list.drug.poll()
             }
             setupNewTests()
         } else loginError()

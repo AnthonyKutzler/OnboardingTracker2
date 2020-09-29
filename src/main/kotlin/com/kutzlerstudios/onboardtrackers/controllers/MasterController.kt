@@ -33,9 +33,17 @@ class MasterController(var repository: PeopleRepository, var companyRepository: 
                 }
                 for(thread in onboardList)
                     thread.join()
-                when (credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()) {
-                        else -> Quest(company.pk!!, drivers[0], emailer, credentialRepository)
+                //pLists.drug.clear()
+                val drugList = mutableListOf<Thread>()
+                for(driver in drivers) {
+                    val thread : Thread = when (credentialRepository.findAllByCompanyAndType(company.pk!!).provider!!.toLowerCase()) {
+                        else -> Quest(company.pk!!, driver, emailer, credentialRepository)
+                    }
+                    thread.start()
+                    drugList.add(thread)
                 }
+                for(thread in drugList)
+                    thread.join()
                 repository.saveAll(pLists.getAll())
             }
         }
